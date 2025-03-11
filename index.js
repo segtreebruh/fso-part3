@@ -1,17 +1,16 @@
-require("dotenv-expand").expand(require("dotenv").config());
-const express = require("express");
-const morgan = require("morgan");
-const mongoose = require("mongoose");
-const Person = require("./models/person");
+require('dotenv-expand').expand(require('dotenv').config());
+const express = require('express');
+const morgan = require('morgan');
+const Person = require('./models/person');
 
 const app = express();
 
-app.use(express.static("dist"));
+app.use(express.static('dist'));
 app.use(express.json());
 
-morgan.token("body", (req) => JSON.stringify(req.body));
+morgan.token('body', (req) => JSON.stringify(req.body));
 app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+  morgan(':method :url :status :res[content-length] - :response-time ms :body')
 );
 
 /**
@@ -23,11 +22,11 @@ app.use(
 //   res.send("success");
 // });
 
-app.get("/api/persons", (req, res) => {
+app.get('/api/persons', (req, res) => {
   Person.find({}).then((person) => res.json(person));
 });
 
-app.get("/info", (req, res, next) => {
+app.get('/info', (req, res, next) => {
   Person.countDocuments({})
     .then((count) => {
       return `
@@ -40,7 +39,7 @@ app.get("/info", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
     .then((person) => {
       if (person) res.json(person);
@@ -56,17 +55,17 @@ app.get("/api/persons/:id", (req, res, next) => {
   // else it will go to the next middleware
 });
 
-app.delete("/api/persons/:id", (req, res, next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
-    .then((result) => res.status(204).end())
+    .then(() => res.status(204).end())
     .catch((err) => next(err));
 });
 
-app.post("/api/persons/", (req, res, next) => {
+app.post('/api/persons/', (req, res, next) => {
   const body = req.body;
 
   if (!body.name || !body.number) {
-    return res.status(400).json({ error: "missing name/number" });
+    return res.status(400).json({ error: 'missing name/number' });
   }
 
   const person = new Person({
@@ -82,14 +81,14 @@ app.post("/api/persons/", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.put("/api/persons/:id", (req, res, next) => {
+app.put('/api/persons/:id', (req, res, next) => {
   const { name, number } = req.body;
   const id = req.params.id;
 
   Person.findByIdAndUpdate(
     id,
     { name, number },
-    { new: true, runValidators: true, content: "query" }
+    { new: true, runValidators: true, content: 'query' }
   )
     .then((result) => {
       if (result) res.json(result);
@@ -101,9 +100,9 @@ app.put("/api/persons/:id", (req, res, next) => {
 const errorHandler = (error, req, res, next) => {
   console.log(error);
 
-  if (error.name === "CastError")
-    return res.status(400).send({ error: "malformed id" });
-  else if (error.name === "ValidationError") {
+  if (error.name === 'CastError')
+    return res.status(400).send({ error: 'malformed id' });
+  else if (error.name === 'ValidationError') {
     return res.status(400).json({ error: error.message });
   }
 
