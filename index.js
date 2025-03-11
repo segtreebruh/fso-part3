@@ -27,7 +27,7 @@ app.get("/api/persons", (req, res) => {
   Person.find({}).then((person) => res.json(person));
 });
 
-app.get("/info", (req, res) => {
+app.get("/info", (req, res, next) => {
   Person.countDocuments({})
     .then((count) => {
       return `
@@ -56,13 +56,13 @@ app.get("/api/persons/:id", (req, res, next) => {
   // else it will go to the next middleware
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
     .then((result) => res.status(204).end())
     .catch((err) => next(err));
 });
 
-app.post("/api/persons/", (req, res) => {
+app.post("/api/persons/", (req, res, next) => {
   const body = req.body;
 
   if (!body.name || !body.number) {
@@ -74,19 +74,22 @@ app.post("/api/persons/", (req, res) => {
     number: body.number,
   });
 
-  person.save().then((person) => {
-    res.json(person);
-  });
+  person
+    .save()
+    .then((person) => {
+      res.json(person);
+    })
+    .catch((err) => next(err));
 });
 
-app.put("/api/persons/:id", (req, res) => {
+app.put("/api/persons/:id", (req, res, next) => {
   const { name, number } = req.body;
   const id = req.params.id;
 
   Person.findByIdAndUpdate(
     id,
     { name, number },
-    { new: true } // update immediately to frontend
+    { new: true, runValidators: true, content: "query" }
   )
     .then((result) => {
       if (result) res.json(result);
@@ -100,6 +103,9 @@ const errorHandler = (error, req, res, next) => {
 
   if (error.name === "CastError")
     return res.status(400).send({ error: "malformed id" });
+  else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
+  }
 
   next(error);
 };
