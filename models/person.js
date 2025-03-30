@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 // load dotenv
 require('dotenv-expand').expand(require('dotenv').config());
 
-mongoose.set('strictQuery', false);
-
 const url = process.env.MONGODB_URI;
 
 console.log('connecting to', url);
